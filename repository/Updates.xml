@@ -6,7 +6,7 @@
  	<PackageUpdate>
   		<Name>com.mkovac.qenigmator</Name>
   		<DisplayName>qEnigmator</DisplayName>
-  		<Description>This is going to install qEnigmator on your computer.</Description>
+  		<Description>This is going to install qEnigmator on your computer</Description>
   		<Version>0.1.0-1</Version>
   		<ReleaseDate>2022-11-29</ReleaseDate>
   		<Default>true</Default>
