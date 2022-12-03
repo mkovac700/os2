@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/icons8-hashtag-large-48.png</file>
+        <file>icons/icons8-checked-identification-documents-48.png</file>
+        <file>icons/icons8-approved-unlock-48.png</file>
+        <file>icons/icons8-add-key-48.png</file>
+        <file>icons/icons8-save-48.png</file>
+        <file>icons/icons8-folder-48.png</file>
+        <file>icons/icons8-ok-48.png</file>
+        <file>icons/icons8-cancel-48.png</file>
+        <file>icons/icons8-remove-48.png</file>
+        <file>icons/icons8-services-48.png</file>
+        <file>icons/icons8-automation-48.png</file>
+        <file>icons/icons8-view-48.png</file>
+        <file>icons/icons8-padlock-48.png</file>
+        <file>icons/icons8-lock-48.png</file>
+        <file>icons/icons8-check-lock-48.png</file>
+        <file>icons/icons8-lock2-48.png</file>
+        <file>icons/icons8-bunch-of-keys-48.png</file>
+        <file>icons/icons8-analyze-48.png</file>
+        <file>icons/icons8-info-48.png</file>
+        <file>icons/icons8-key-security-48.png</file>
+        <file>icons/icons8-key-security-30.png</file>
+        <file>icons/88x31.png</file>
+    </qresource>
+</RCC>
