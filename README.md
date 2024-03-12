@@ -51,6 +51,13 @@
       </ul>
     </li>
     <li><a href="#-preuzimanje">Preuzimanje</a></li>
+    <li>
+      <a href="#-doprinos">Doprinos</a>
+      <ul>
+        <li><a href="#-bugovi-i-prijedlozi">Bugovi i prijedlozi</a></li>
+        <li><a href="#-dnevnik-promjena">Dnevnik promjena</a></li>
+      </ul>
+    </li>
     <li><a href="#-primjena">Primjena</a></li>
     <li><a href="#-licenca">Licenca</a></li>
   </ol>
@@ -179,7 +186,6 @@ git clone https://github.com/mkovac700/os2.git
 <p align="right">(<a href="#readme-top">povratak na vrh</a>)</p>
 
 ## 📦 Preuzimanje
-Program je dostupan za Windows i Linux operacijski sustav. 
 
 <table>
   <tbody>
@@ -188,6 +194,8 @@ Program je dostupan za Windows i Linux operacijski sustav.
     </tr>
   </tbody>
 </table>
+
+Program je dostupan za Windows i Linux operacijski sustav. 
 
 <div align="center">
 <a href="https://github.com/mkovac700/os2/releases/"><img alt="download" src="https://img.shields.io/badge/DOWNLOAD-green?style=for-the-badge%0D%0A" height=40></a>
