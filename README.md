@@ -226,14 +226,3 @@ Ovaj se program može koristiti u obrazovne svrhe.
 Ovaj je rad licenciran pod <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>. Za više informacija pogledajte `LICENSE.txt`
 
 <p align="right">(<a href="#readme-top">povratak na vrh</a>)</p>
-
-[contributors-shield]: https://img.shields.io/github/contributors/mkovac700/os2?style=for-the-badge
-[contributors-url]: https://github.com/othneildrew/Best-README-Template/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/mkovac700/os2?style=for-the-badge
-[forks-url]: https://github.com/othneildrew/Best-README-Template/network/members
-[stars-shield]: https://img.shields.io/github/stars/mkovac700/os2?style=for-the-badge
-[stars-url]: https://github.com/othneildrew/Best-README-Template/stargazers
-[issues-shield]: https://img.shields.io/github/issues/mkovac700/os2?style=for-the-badge
-[issues-url]: https://github.com/othneildrew/Best-README-Template/issues
-[license-shield]: https://img.shields.io/github/license/mkovac700/os2.svg?style=for-the-badge
-[license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
