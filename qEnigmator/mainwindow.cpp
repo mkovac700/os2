@@ -187,14 +187,26 @@ void MainWindow::on_toolButton_1_Generate_clicked()
         int i;
         bool success;
 
-        CkRsa rsa;
+        // CkRsa rsa;
 
-        rsa.GenerateKey(1024);
+        // rsa.GenerateKey(1024);
 
-        const char *publicKeyXml = rsa.exportPublicKey();
-        const char *privateKeyXml = rsa.exportPrivateKey();
+        // const char *publicKeyXml = rsa.exportPublicKey();
+        // const char *privateKeyXml = rsa.exportPrivateKey();
 
-        filelocation = keysDir.relativeFilePath("./keys");
+        // Random number generator
+        Botan::AutoSeeded_RNG rng;
+
+        // Generate RSA private key
+        Botan::RSA_PrivateKey rsa_priv_key(rng, 1024);
+
+        // Extract the public key from the private key
+        Botan::RSA_PublicKey rsa_pub_key(rsa_priv_key);
+
+        // filelocation = keysDir.relativeFilePath("./keys");
+        // filename = filelocation + "/javni_kljuc.pem";
+
+        filelocation = keysDir.absolutePath();
         filename = filelocation + "/javni_kljuc.pem";
 
         i = 2;
@@ -202,11 +214,28 @@ void MainWindow::on_toolButton_1_Generate_clicked()
             filename = filelocation + "/javni_kljuc_" + QString::number(i++) + ".pem";
         }
 
-        CkPublicKey pubKey;
-        success = pubKey.LoadFromString(publicKeyXml);
-        success = pubKey.SavePemFile(false,filename.toLocal8Bit());
+        // CkPublicKey pubKey;
+        // success = pubKey.LoadFromString(publicKeyXml);
+        // success = pubKey.SavePemFile(false,filename.toLocal8Bit());
 
-        filelocation = keysDir.relativeFilePath("./keys");
+        // Save public key to file in PEM format
+        QFile pub_key_file(filename);
+        //QFile pub_key_file("javni_kljuc.pem");
+
+        qDebug() << "Current working directory: " << QDir::currentPath().toStdString() ;
+        qDebug() << "pub key file location" << filelocation;
+        qDebug() << "pub key file:" << filename;
+
+        if (pub_key_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&pub_key_file);
+            out << Botan::PEM_Code::encode(rsa_pub_key.public_key_bits(),"PUBLIC KEY").c_str();
+            pub_key_file.close();
+            qDebug() << "Public key saved to " << filename.toStdString();
+        } else {
+            qDebug() << "Failed to open public key file for writing.";
+        }
+
+        filelocation = keysDir.absolutePath();
         filename = filelocation + "/privatni_kljuc.pem";
 
         i = 2;
@@ -214,23 +243,37 @@ void MainWindow::on_toolButton_1_Generate_clicked()
             filename = filelocation + "/privatni_kljuc_" + QString::number(i++) + ".pem";
         }
 
-        CkPrivateKey privKey;
-        success = privKey.LoadXml(privateKeyXml);
-        success = privKey.SavePemFile(filename.toLocal8Bit());
+        // CkPrivateKey privKey;
+        // success = privKey.LoadXml(privateKeyXml);
+        // success = privKey.SavePemFile(filename.toLocal8Bit());
 
-        if(success){
-            if(QMessageBox::Yes == QMessageBox::question(this,"Stvaranje ključeva","RSA par ključeva generiran. Želite li prikazati javni ključ?")){
-                ui->plainTextEdit_1->setPlainText(pubKey.getPem(false));
-            }
+        // Save private key to file in PEM format
+        QFile priv_key_file(filename);
+
+        if (priv_key_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&priv_key_file);
+            out << Botan::PEM_Code::encode(rsa_priv_key.private_key_bits(),"PRIVATE KEY").c_str();
+            priv_key_file.close();
+            qDebug() << "Private key saved to " << filename.toStdString();
+        } else {
+            qDebug() << "Failed to open private key file for writing.";
         }
-        else{
-            QMessageBox::critical(this,"Stvaranje ključeva","Neuspješno stvaranje RSA para ključeva!");
-        }
+
+        // if(success){
+        //     if(QMessageBox::Yes == QMessageBox::question(this,"Stvaranje ključeva","RSA par ključeva generiran. Želite li prikazati javni ključ?")){
+        //         // ui->plainTextEdit_1->setPlainText(pubKey.getPem(false));
+        //     }
+        // }
+        // else{
+        //     QMessageBox::critical(this,"Stvaranje ključeva","Neuspješno stvaranje RSA para ključeva!");
+        // }
 
         break;
     }
     case 0: //AES
     {
+#ifdef AES
+
         ui->plainTextEdit_1->clear();
 
         CkPrng prng;
@@ -267,6 +310,7 @@ void MainWindow::on_toolButton_1_Generate_clicked()
 
             QMessageBox::critical(this,"Stvaranje ključeva","Neuspješno stvaranje AES-256 tajnog ključa!");
         }
+#endif
 
         break;
     }
@@ -275,6 +319,35 @@ void MainWindow::on_toolButton_1_Generate_clicked()
     }
 }
 
+void MainWindow::CheckKeysDir()
+{
+    QDir exeDir = QCoreApplication::applicationDirPath();
+    keysDir = exeDir.absoluteFilePath("keys");
+
+    // keysDir = QDir(QCoreApplication::applicationDirPath()+"/keys/");
+
+
+    // qDebug() << "exe dir" << QCoreApplication::applicationDirPath();
+    // qDebug() << "keys dir" << keysDir.currentPath();
+
+    qDebug() << "exe dir:" << exeDir.absolutePath();
+    qDebug() << "keys dir:" << keysDir.absolutePath();
+
+    if(!keysDir.exists()){
+        qDebug() << "keys directory doesnt exist, creating new directory...";
+        if(keysDir.mkpath(".")){
+            qDebug() << "keys directory created successfully";
+        }
+        else{
+            qDebug() << "error creating keys directory";
+        }
+    }
+    else{
+        qDebug() << "keys directory exist already";
+    }
+}
+
+#ifdef X
 
 void MainWindow::on_toolButton_1_KeyPreview_clicked()
 {
@@ -302,28 +375,6 @@ void MainWindow::on_toolButton_1_KeyPreview_clicked()
     ui->plainTextEdit_1->clear();
     ui->plainTextEdit_1->setPlainText(fileContent);
 }
-
-void MainWindow::CheckKeysDir()
-{
-    keysDir = QDir(QCoreApplication::applicationDirPath()+"/keys/");
-
-    qDebug() << QCoreApplication::applicationDirPath();
-    qDebug() << keysDir.currentPath();
-
-    if(!keysDir.exists()){
-        qDebug() << "keys directory doesnt exist, creating new directory...";
-        if(keysDir.mkpath(".")){
-            qDebug() << "keys directory created successfully";
-        }
-        else{
-            qDebug() << "error creating keys directory";
-        }
-    }
-    else{
-        qDebug() << "keys directory exist already";
-    }
-}
-
 
 void MainWindow::on_toolButton_1_ClearPlainText_clicked()
 {
@@ -906,7 +957,7 @@ void MainWindow::on_toolButton_4_VerifySignedText_clicked()
     ui->lineEdit_4_SignHash->setCursorPosition(0);
 }
 
-
+#endif
 void MainWindow::on_plainTextEdit_4_Sign_textChanged()
 {
     ui->lineEdit_4_SignHash->clear();
@@ -954,8 +1005,8 @@ void MainWindow::CheckDocsDir()
 {
     docsDir = QDir(QCoreApplication::applicationDirPath()+"/docs/");
 
-    qDebug() << QCoreApplication::applicationDirPath();
-    qDebug() << docsDir.currentPath();
+    qDebug() << "exe dir" << QCoreApplication::applicationDirPath();
+    qDebug() << "docs dir" << docsDir.currentPath();
 
     if(!docsDir.exists()){
         qDebug() << "docs directory doesnt exist, creating new directory...";

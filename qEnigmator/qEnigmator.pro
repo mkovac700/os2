@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++17
+CONFIG += c++20
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -39,11 +39,29 @@ linux-g++* {
 }
 
 win32 {
-    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/ -llibchilkat-9.5.0 -lwsock32 -lcrypt32 -lws2_32 -ldnsapi
-    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/ -llibchilkat-9.5.0 -lwsock32 -lcrypt32 -lws2_32 -ldnsapi
+    #win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/ -llibchilkat-9.5.0 -lwsock32 -lcrypt32 -lws2_32 -ldnsapi
+    #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/ -llibchilkat-9.5.0 -lwsock32 -lcrypt32 -lws2_32 -ldnsapi
 
-    INCLUDEPATH += $$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/include
-    DEPENDPATH += $$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/include
+    #INCLUDEPATH += $$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/include
+    #DEPENDPATH += $$PWD/../../Libraries/chilkat-mingw-x86_64-10.0.0-posix-seh/include
+
+    #CRYPTOPP
+
+    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/cryptopp890/ -lcryptopp
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/cryptopp890/ -lcryptopp
+
+    INCLUDEPATH += $$PWD/lib/cryptopp890/
+    DEPENDPATH += $$PWD/lib/cryptopp890/
+
+    #BOTAN
+
+    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/Botan-3.7.1/ -lbotan-3
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/Botan-3.7.1/ -lbotan-3
+
+    INCLUDEPATH += $$PWD/lib/Botan-3.7.1/build/include/public/
+    DEPENDPATH += $$PWD/lib/Botan-3.7.1/build/include/public/
 
     RC_ICONS = appicon.ico
 }
+
+#DEFINES += REFACTOR
