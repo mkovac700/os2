@@ -21,7 +21,10 @@ void EncDecDialog::on_comboBox_Algorithm_currentIndexChanged(int index)
 
 void EncDecDialog::on_pushButton_KeyFile_clicked()
 {
-    QString currentFile = QFileDialog::getOpenFileName(this,"Open File","./keys","Key Files (*.aes *.pem)");
+    QDir exeDir = QCoreApplication::applicationDirPath();
+    QDir keysDir = exeDir.absoluteFilePath("keys");
+
+    QString currentFile = QFileDialog::getOpenFileName(this,"Open File",keysDir.absolutePath(),"Key Files (*.aes *.pem)");
 
     if(currentFile.isEmpty()) return;
 

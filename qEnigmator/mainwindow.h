@@ -30,6 +30,8 @@
 #include <botan/pem.h>
 #include <botan/symkey.h>
 #include <botan/hex.h>
+#include <botan/block_cipher.h>
+#include <botan/cipher_mode.h>
 
 #include <QPointer>
 

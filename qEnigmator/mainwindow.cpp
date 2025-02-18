@@ -330,36 +330,6 @@ void MainWindow::on_toolButton_1_Generate_clicked()
     }
 }
 
-void MainWindow::CheckKeysDir()
-{
-    QDir exeDir = QCoreApplication::applicationDirPath();
-    keysDir = exeDir.absoluteFilePath("keys");
-
-    // keysDir = QDir(QCoreApplication::applicationDirPath()+"/keys/");
-
-
-    // qDebug() << "exe dir" << QCoreApplication::applicationDirPath();
-    // qDebug() << "keys dir" << keysDir.currentPath();
-
-    qDebug() << "exe dir:" << exeDir.absolutePath();
-    qDebug() << "keys dir:" << keysDir.absolutePath();
-
-    if(!keysDir.exists()){
-        qDebug() << "keys directory doesnt exist, creating new directory...";
-        if(keysDir.mkpath(".")){
-            qDebug() << "keys directory created successfully";
-        }
-        else{
-            qDebug() << "error creating keys directory";
-        }
-    }
-    else{
-        qDebug() << "keys directory exist already";
-    }
-}
-
-#ifdef X
-
 void MainWindow::on_toolButton_1_KeyPreview_clicked()
 {
     QString fileContent;
@@ -398,7 +368,7 @@ void MainWindow::on_toolButton_2_LoadPlainText_clicked()
 {
     CheckDocsDir();
 
-    currentFile = QFileDialog::getOpenFileName(this,"Open File","./docs","Text (*.txt) ;; Encrypted (*.CRYPT)");
+    currentFile = QFileDialog::getOpenFileName(this,"Open File",docsDir.absolutePath(),"Text (*.txt) ;; Encrypted (*.CRYPT)");
     currentFileContent = "";
 
     if(currentFile.isEmpty()) return;
@@ -436,7 +406,7 @@ void MainWindow::on_toolButton_2_SavePlainText_clicked()
 {
     CheckDocsDir();
 
-    QString filename = QFileDialog::getSaveFileName(this,"Save As","./docs","Text (*.txt)");
+    QString filename = QFileDialog::getSaveFileName(this,"Save As",docsDir.absolutePath(),"Text (*.txt)");
     if( filename.isEmpty())
         return;
 
@@ -495,17 +465,54 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
     case 0: //AES
     {
         if(isKeyOK){
-            CkCrypt2 crypt;
+            // CkCrypt2 crypt;
 
-            crypt.put_CryptAlgorithm("aes");
-            crypt.put_KeyLength(256);
-            crypt.put_EncodingMode("hex");
+            // crypt.put_CryptAlgorithm("aes");
+            // crypt.put_KeyLength(256);
+            // crypt.put_EncodingMode("hex");
 
-            const char *keyHex = encKeyContent.toLocal8Bit();
+            // const char *keyHex = encKeyContent.toLocal8Bit();
 
-            crypt.SetEncodedKey(keyHex,"hex");
 
-            QString encStr = crypt.encryptStringENC(currentFileContent.toLocal8Bit());
+            // Convert hex string to binary key
+            std::vector<uint8_t> keyBytes = Botan::hex_decode(encKeyContent.toStdString());
+            Botan::SymmetricKey secretKey = Botan::SymmetricKey(keyBytes);
+
+            Botan::AutoSeeded_RNG rng;
+
+            // Generate a random IV (Initialization Vector)
+            std::vector<uint8_t> iv(16);
+            rng.randomize(iv.data(), iv.size());
+
+            // Create the AES cipher in CBC mode with padding
+            std::unique_ptr<Botan::Cipher_Mode> enc = Botan::Cipher_Mode::create("AES-256/CBC/PKCS7", Botan::Cipher_Dir::Encryption);
+
+            if (!enc) {
+                qWarning() << "Failed to create AES cipher!";
+            }
+
+            enc->set_key(secretKey);
+            enc->start(iv);
+
+            // Convert QString to QByteArray (UTF-8) and then to a byte vector
+            std::vector<uint8_t> plaintextBytes(currentFileContent.toUtf8().begin(), currentFileContent.toUtf8().end());
+
+            // Pad the input and encrypt
+            enc->finish(plaintextBytes);
+
+            // Combine IV and ciphertext (IV is needed for decryption)
+            std::vector<uint8_t> encryptedData = iv;
+            encryptedData.insert(encryptedData.end(), plaintextBytes.begin(), plaintextBytes.end());
+
+            QString encStr = QString::fromStdString(Botan::hex_encode(encryptedData));
+
+            // crypt.SetEncodedKey(keyHex,"hex");
+
+            // QString encStr = crypt.encryptStringENC(currentFileContent.toLocal8Bit());
+
+            // qDebug() << "Encrypted string: " << encStr;
+
+            // ui->plainTextEdit_2->setPlainText(encStr);
 
             qDebug() << "Encrypted string: " << encStr;
 
@@ -542,6 +549,8 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
     }
     case 1: //RSA
     {
+
+#ifdef X
         if(isKeyOK){
             CkRsa rsa;
 
@@ -593,7 +602,7 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
         else{
             QMessageBox::critical(this,"Greška","Ključ nije odabran ili nije ispravan.");
         }
-
+#endif
         break;
     }
 
@@ -616,7 +625,7 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
 
     int decAlgorithm;
     QString decKeyContent;
-    const char *decKeyContent2;
+    //const char *decKeyContent2;
     bool isKeyOK = false;
 
     EncDecDialog *encdecDialog = new EncDecDialog;
@@ -632,7 +641,7 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
         qDebug() << "accepted";
         decAlgorithm = encdecDialog->algorithm;
         decKeyContent = encdecDialog->keyFileContent;
-        decKeyContent2 = encdecDialog->keyFileContent2;
+        //decKeyContent2 = encdecDialog->keyFileContent2;
         isKeyOK = encdecDialog->ok;
         delete encdecDialog;
     }
@@ -641,17 +650,50 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
     case 0: //aes
     {
         if(isKeyOK){
-            CkCrypt2 crypt;
+            // CkCrypt2 crypt;
 
-            crypt.put_CryptAlgorithm("aes");
-            crypt.put_KeyLength(256);
-            crypt.put_EncodingMode("hex");
+            // crypt.put_CryptAlgorithm("aes");
+            // crypt.put_KeyLength(256);
+            // crypt.put_EncodingMode("hex");
 
-            const char *keyHex = decKeyContent.toLocal8Bit();
+            std::vector<uint8_t> keyBytes = Botan::hex_decode(decKeyContent.toStdString());
+            Botan::SymmetricKey secretKey = Botan::SymmetricKey(keyBytes);
 
-            crypt.SetEncodedKey(keyHex,"hex");
+            //const char *keyHex = decKeyContent.toLocal8Bit();
 
-            QString decStr = crypt.decryptStringENC(currentFileContent.toLocal8Bit());
+            // crypt.SetEncodedKey(keyHex,"hex");
+
+            //QString decStr = crypt.decryptStringENC(currentFileContent.toLocal8Bit());
+
+            // Convert hex-encoded encrypted text to raw bytes
+            std::vector<uint8_t> encryptedData = Botan::hex_decode(currentFileContent.toStdString());
+
+            if (encryptedData.size() < 16) {
+                qWarning() << "Invalid encrypted data!";
+            }
+
+            // Extract IV (first 16 bytes) and ciphertext (remaining bytes)
+            std::vector<uint8_t> iv(encryptedData.begin(), encryptedData.begin() + 16);
+            std::vector<uint8_t> ciphertext(encryptedData.begin() + 16, encryptedData.end());
+
+            // Create AES-256 CBC decryption cipher
+            std::unique_ptr<Botan::Cipher_Mode> dec =
+                Botan::Cipher_Mode::create("AES-256/CBC/PKCS7", Botan::Cipher_Dir::Decryption);
+
+            if (!dec) {
+                qWarning() << "Failed to create AES cipher!";
+            }
+
+            dec->set_key(secretKey);
+            dec->start(iv);
+
+            // Decrypt the data
+            dec->finish(ciphertext);
+
+            // QString decStr = crypt.decryptStringENC(currentFileContent.toLocal8Bit());
+
+            // Convert decrypted bytes back to QString
+            QString decStr = QString::fromUtf8(reinterpret_cast<const char*>(ciphertext.data()), ciphertext.size());
 
             qDebug() << "Decrypted string: " << decStr;
 
@@ -687,6 +729,8 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
     }
     case 1: //rsa
     {
+#ifdef X
+
         if(isKeyOK){
             CkRsa rsa;
 
@@ -739,7 +783,7 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
         else{
             QMessageBox::critical(this,"Greška","Ključ nije odabran ili nije ispravan.");
         }
-
+#endif
         break;
     }
     default:
@@ -810,6 +854,8 @@ void MainWindow::on_toolButton_4_SavePlainText_clicked()
 
 void MainWindow::on_toolButton_4_SignPlainText_clicked()
 {
+#ifdef X
+
     QString currentFile = QFileDialog::getOpenFileName(this,"Open File","./keys","Key Files (*.pem)");
     const char *currentFileContent = "";
 
@@ -846,6 +892,7 @@ void MainWindow::on_toolButton_4_SignPlainText_clicked()
 
     ui->plainTextEdit_4_Sign->setPlainText(signedStr);
 
+#endif
 
 }
 
@@ -921,6 +968,8 @@ void MainWindow::on_toolButton_4_SaveSignedText_clicked()
 
 void MainWindow::on_toolButton_4_VerifySignedText_clicked()
 {
+#ifdef X
+
     QString currentFile = QFileDialog::getOpenFileName(this,"Open File","./keys","Key Files (*.pem)");
     QString currentFileContent = "";
 
@@ -966,9 +1015,10 @@ void MainWindow::on_toolButton_4_VerifySignedText_clicked()
 
     ui->lineEdit_4_SignHash->setText(verifiedStr);
     ui->lineEdit_4_SignHash->setCursorPosition(0);
-}
 
 #endif
+}
+
 void MainWindow::on_plainTextEdit_4_Sign_textChanged()
 {
     ui->lineEdit_4_SignHash->clear();
@@ -1014,10 +1064,16 @@ void MainWindow::on_lineEdit_4_SignHash_textChanged(const QString &arg1)
 
 void MainWindow::CheckDocsDir()
 {
-    docsDir = QDir(QCoreApplication::applicationDirPath()+"/docs/");
+    // docsDir = QDir(QCoreApplication::applicationDirPath()+"/docs/");
 
-    qDebug() << "exe dir" << QCoreApplication::applicationDirPath();
-    qDebug() << "docs dir" << docsDir.currentPath();
+    // qDebug() << "exe dir" << QCoreApplication::applicationDirPath();
+    // qDebug() << "docs dir" << docsDir.currentPath();
+
+    QDir exeDir = QCoreApplication::applicationDirPath();
+    docsDir = exeDir.absoluteFilePath("docs");
+
+    qDebug() << "exe dir:" << exeDir.absolutePath();
+    qDebug() << "docs dir:" << docsDir.absolutePath();
 
     if(!docsDir.exists()){
         qDebug() << "docs directory doesnt exist, creating new directory...";
@@ -1030,6 +1086,34 @@ void MainWindow::CheckDocsDir()
     }
     else{
         qDebug() << "docs directory exist already";
+    }
+}
+
+void MainWindow::CheckKeysDir()
+{
+    QDir exeDir = QCoreApplication::applicationDirPath();
+    keysDir = exeDir.absoluteFilePath("keys");
+
+    // keysDir = QDir(QCoreApplication::applicationDirPath()+"/keys/");
+
+
+    // qDebug() << "exe dir" << QCoreApplication::applicationDirPath();
+    // qDebug() << "keys dir" << keysDir.currentPath();
+
+    qDebug() << "exe dir:" << exeDir.absolutePath();
+    qDebug() << "keys dir:" << keysDir.absolutePath();
+
+    if(!keysDir.exists()){
+        qDebug() << "keys directory doesnt exist, creating new directory...";
+        if(keysDir.mkpath(".")){
+            qDebug() << "keys directory created successfully";
+        }
+        else{
+            qDebug() << "error creating keys directory";
+        }
+    }
+    else{
+        qDebug() << "keys directory exist already";
     }
 }
 
