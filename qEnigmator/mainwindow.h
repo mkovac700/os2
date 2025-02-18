@@ -28,6 +28,8 @@
 #include <botan/auto_rng.h>
 #include <botan/rsa.h>
 #include <botan/pem.h>
+#include <botan/symkey.h>
+#include <botan/hex.h>
 
 #include <QPointer>
 
@@ -64,35 +66,35 @@ private slots:
 
     void on_toolButton_1_Generate_clicked();
 
-    void on_toolButton_1_KeyPreview_clicked() {};
+    void on_toolButton_1_KeyPreview_clicked() ;
 
-    void on_toolButton_1_ClearPlainText_clicked() {};
+    void on_toolButton_1_ClearPlainText_clicked() ;
 
-    void on_toolButton_2_LoadPlainText_clicked() {};
+    void on_toolButton_2_LoadPlainText_clicked() ;
 
-    void on_toolButton_2_SavePlainText_clicked() {};
+    void on_toolButton_2_SavePlainText_clicked() ;
 
-    void on_toolButton_2_EncryptPlainText_clicked() {};
+    void on_toolButton_2_EncryptPlainText_clicked() ;
 
-    void on_toolButton_2_DecryptPlainText_clicked() {};
+    void on_toolButton_2_DecryptPlainText_clicked() ;
 
-    void on_toolButton_2_ClearPlainText_clicked() {};
+    void on_toolButton_2_ClearPlainText_clicked() ;
 
-    void on_toolButton_4_LoadPlainText_clicked() {};
+    void on_toolButton_4_LoadPlainText_clicked() ;
 
-    void on_toolButton_4_SavePlainText_clicked() {};
+    void on_toolButton_4_SavePlainText_clicked() ;
 
-    void on_toolButton_4_SignPlainText_clicked() {};
+    void on_toolButton_4_SignPlainText_clicked() ;
 
-    void on_plainTextEdit_4_Source_textChanged() {};
+    void on_plainTextEdit_4_Source_textChanged() ;
 
-    void on_toolButton_4_ClearPlainText_clicked() {};
+    void on_toolButton_4_ClearPlainText_clicked() ;
 
-    void on_toolButton_4_LoadSignedText_clicked() {};
+    void on_toolButton_4_LoadSignedText_clicked() ;
 
-    void on_toolButton_4_SaveSignedText_clicked() {};
+    void on_toolButton_4_SaveSignedText_clicked() ;
 
-    void on_toolButton_4_VerifySignedText_clicked() {};
+    void on_toolButton_4_VerifySignedText_clicked() ;
 
     void on_plainTextEdit_4_Sign_textChanged();
 

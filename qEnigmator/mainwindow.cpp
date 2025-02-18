@@ -231,8 +231,10 @@ void MainWindow::on_toolButton_1_Generate_clicked()
             out << Botan::PEM_Code::encode(rsa_pub_key.public_key_bits(),"PUBLIC KEY").c_str();
             pub_key_file.close();
             qDebug() << "Public key saved to " << filename.toStdString();
+            success = true;
         } else {
             qDebug() << "Failed to open public key file for writing.";
+            success = false;
         }
 
         filelocation = keysDir.absolutePath();
@@ -255,34 +257,44 @@ void MainWindow::on_toolButton_1_Generate_clicked()
             out << Botan::PEM_Code::encode(rsa_priv_key.private_key_bits(),"PRIVATE KEY").c_str();
             priv_key_file.close();
             qDebug() << "Private key saved to " << filename.toStdString();
+            success = true;
         } else {
             qDebug() << "Failed to open private key file for writing.";
+            success = false;
         }
 
-        // if(success){
-        //     if(QMessageBox::Yes == QMessageBox::question(this,"Stvaranje ključeva","RSA par ključeva generiran. Želite li prikazati javni ključ?")){
-        //         // ui->plainTextEdit_1->setPlainText(pubKey.getPem(false));
-        //     }
-        // }
-        // else{
-        //     QMessageBox::critical(this,"Stvaranje ključeva","Neuspješno stvaranje RSA para ključeva!");
-        // }
+        if(success){
+            if(QMessageBox::Yes == QMessageBox::question(this,"Stvaranje ključeva","RSA par ključeva generiran. Želite li prikazati javni ključ?")){
+                ui->plainTextEdit_1->setPlainText(Botan::PEM_Code::encode(rsa_pub_key.public_key_bits(),"PUBLIC KEY").c_str());
+            }
+        }
+        else{
+            QMessageBox::critical(this,"Stvaranje ključeva","Neuspješno stvaranje RSA para ključeva!");
+        }
 
         break;
     }
     case 0: //AES
     {
-#ifdef AES
-
         ui->plainTextEdit_1->clear();
 
-        CkPrng prng;
-        const char* secretKeyHex = prng.genRandom(32,"hex");
+        QString filelocation;
+        QString filename;
 
-        qDebug() << "randomly generated key: " << secretKeyHex << "\r\n";
+        Botan::AutoSeeded_RNG rng;  // Random number generator
+        Botan::SymmetricKey key(rng, 32); // Generate 256-bit AES key (32 bytes x 8 = 256 bits)
 
-        QString filelocation = keysDir.relativeFilePath("./keys");
-        QString filename = filelocation + "/tajni_kljuc.aes";
+        // CkPrng prng;
+        // const char* secretKeyHex = prng.genRandom(32,"hex");
+
+        QString hexKey = QString::fromStdString(Botan::hex_encode(key));
+
+        // qDebug() << "randomly generated key: " << secretKeyHex << "\r\n";
+        qDebug() << "randomly generated key: " << hexKey << "\r\n";
+
+        filelocation = keysDir.absolutePath();
+        filename = filelocation + "/tajni_kljuc.aes";
+
         int i = 2;
         while(QFile::exists(filename)){
             filename = filelocation + "/tajni_kljuc_" + QString::number(i++) + ".aes";
@@ -294,14 +306,14 @@ void MainWindow::on_toolButton_1_Generate_clicked()
 
         if(file.open(QIODevice::WriteOnly | QIODevice::Text)){
             QTextStream out(&file);
-            out << secretKeyHex;
+            out << hexKey;
 
             file.close();
 
             qDebug() << "file saved successfully";
 
             if(QMessageBox::Yes == QMessageBox::question(this,"Stvaranje ključeva","AES-256 tajni ključ generiran. Želite li prikazati ključ?")){
-                ui->plainTextEdit_1->setPlainText(secretKeyHex);
+                ui->plainTextEdit_1->setPlainText(hexKey);
             }
 
         }
@@ -310,7 +322,6 @@ void MainWindow::on_toolButton_1_Generate_clicked()
 
             QMessageBox::critical(this,"Stvaranje ključeva","Neuspješno stvaranje AES-256 tajnog ključa!");
         }
-#endif
 
         break;
     }
