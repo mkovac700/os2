@@ -572,33 +572,65 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
     }
     case 1: //RSA
     {
-
-#ifdef X
         if(isKeyOK){
-            CkRsa rsa;
+            // CkRsa rsa;
 
-            const char *publicKeyPem = encKeyContent.toLocal8Bit();
-            CkPublicKey pubkey;
+            // const char *publicKeyPem = encKeyContent.toLocal8Bit();
+            // CkPublicKey pubkey;
 
-            if(!pubkey.LoadFromString(publicKeyPem)){
-                QMessageBox::critical(this,"Greška",pubkey.lastErrorText());
-                qDebug() << "ERROR 1";
-                return;
-            }
+            // if(!pubkey.LoadFromString(publicKeyPem)){
+            //     QMessageBox::critical(this,"Greška",pubkey.lastErrorText());
+            //     qDebug() << "ERROR 1";
+            //     return;
+            // }
 
-            const char *publicKeyXml = pubkey.getXml();
+            // const char *publicKeyXml = pubkey.getXml();
 
-            if(!rsa.ImportPublicKey(publicKeyXml)){
-                QMessageBox::critical(this,"Greška",rsa.lastErrorText());
-                qDebug() << "ERROR 2";
-                return;
-            }
+            // if(!rsa.ImportPublicKey(publicKeyXml)){
+            //     QMessageBox::critical(this,"Greška",rsa.lastErrorText());
+            //     qDebug() << "ERROR 2";
+            //     return;
+            // }
 
-            const char *encryptedStr = rsa.encryptStringENC(currentFileContent.toLocal8Bit(),false);
+            // Load the public key from PEM
+            // Botan::DataSource_Memory pem(encKeyContent.toStdString());
 
-            qDebug() << "Encrypted string: " << encryptedStr;
+            // std::string label = "PUBLIC KEY";
 
-            ui->plainTextEdit_2->setPlainText(encryptedStr);
+            // auto decodedPublicKey = Botan::PEM_Code::decode(encKeyContent.toStdString(), label);
+
+            // Botan::RSA_PublicKey publicKey(Botan::AlgorithmIdentifier::Encoding_Option, decodedPublicKey);
+
+            Botan::AutoSeeded_RNG rng;
+
+            // Decode PEM data
+            std::string label = "PUBLIC KEY";
+            Botan::DataSource_Memory data_src_pub(encKeyContent.toStdString());
+            Botan::secure_vector<uint8_t> pub_key_bits = Botan::PEM_Code::decode(data_src_pub, label);
+
+            // Create AlgorithmIdentifier for RSA
+            Botan::AlgorithmIdentifier alg_id(Botan::OID::from_string("RSA"), Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+
+            // Construct RSA_PublicKey
+            Botan::RSA_PublicKey rsa_pub_key(alg_id,pub_key_bits);
+
+            QString plaintext = currentFileContent;
+
+            std::string plaintext_utf8 = plaintext.toUtf8().toStdString();
+            std::vector<uint8_t> plaintext_data(plaintext_utf8.begin(), plaintext_utf8.end());
+
+            // Encrypt a message using the public key
+            Botan::PK_Encryptor_EME encryptor(rsa_pub_key, rng, "OAEP(SHA-256)");
+            std::vector<uint8_t> ciphertext = encryptor.encrypt(
+                reinterpret_cast<const uint8_t*>(plaintext_data.data()), plaintext_data.size(), rng);
+
+            std::string encrypted_text(ciphertext.begin(), ciphertext.end());
+
+            // const char *encryptedStr = rsa.encryptStringENC(currentFileContent.toLocal8Bit(),false);
+
+            qDebug() << "Encrypted string: " << encrypted_text;
+
+            ui->plainTextEdit_2->setPlainText(QString::fromStdString(encrypted_text));
 
             QFile file(currentFile);
 
@@ -618,14 +650,14 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
             file.rename(newFileName);
 
             currentFile = newFileName;
-            currentFileContent = encryptedStr;
+            currentFileContent = QString::fromStdString(encrypted_text);
 
             ui->plainTextEdit_2->setReadOnly(true);
         }
         else{
             QMessageBox::critical(this,"Greška","Ključ nije odabran ili nije ispravan.");
         }
-#endif
+
         break;
     }
 
@@ -753,34 +785,61 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
     }
     case 1: //rsa
     {
-#ifdef X
-
         if(isKeyOK){
-            CkRsa rsa;
+            // CkRsa rsa;
 
-            const char *privateKeyPem = decKeyContent2;
+            // const char *privateKeyPem = decKeyContent2;
 
-            qDebug() << "private key pem: " << privateKeyPem;
+            // qDebug() << "private key pem: " << privateKeyPem;
 
-            CkPrivateKey privkey;
+            // CkPrivateKey privkey;
 
-            if(!privkey.LoadPem(privateKeyPem)){
-                QMessageBox::critical(this,"Greška",privkey.lastErrorText());
-                return;
-            }
+            // if(!privkey.LoadPem(privateKeyPem)){
+            //     QMessageBox::critical(this,"Greška",privkey.lastErrorText());
+            //     return;
+            // }
 
-            const char *privateKeyXml = privkey.getXml();
+            // const char *privateKeyXml = privkey.getXml();
 
-            if(!rsa.ImportPrivateKey(privateKeyXml)){
-                QMessageBox::critical(this,"Greška",rsa.lastErrorText());
-                return;
-            }
+            // if(!rsa.ImportPrivateKey(privateKeyXml)){
+            //     QMessageBox::critical(this,"Greška",rsa.lastErrorText());
+            //     return;
+            // }
 
-            const char *decryptedStr = rsa.decryptStringENC(currentFileContent.toLocal8Bit(),true);
+            try{
 
-            qDebug() << "Encrypted string: " << decryptedStr;
 
-            ui->plainTextEdit_2->setPlainText(decryptedStr);
+
+            Botan::AutoSeeded_RNG rng;
+
+            // Decode PEM data
+            std::string label = "PRIVATE KEY";
+            Botan::DataSource_Memory data_src_priv(decKeyContent.toStdString());
+            Botan::secure_vector<uint8_t> priv_key_bits = Botan::PEM_Code::decode(data_src_priv, label);
+
+            // Create AlgorithmIdentifier for RSA
+            Botan::AlgorithmIdentifier alg_id(Botan::OID::from_string("RSA"), Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+
+            // Construct RSA_PrivateKey
+            Botan::RSA_PrivateKey rsa_priv_key(alg_id, priv_key_bits);
+
+            std::vector<uint8_t> ciphertext(currentFileContent.toStdString().begin(), currentFileContent.toStdString().end());
+
+            // Decrypt the message using the private key
+            Botan::PK_Decryptor_EME decryptor(rsa_priv_key, rng, "OAEP(SHA-256)");
+            Botan::secure_vector<uint8_t> decrypted_data = decryptor.decrypt(
+                ciphertext.data(), ciphertext.size());
+
+            // Convert decrypted data to QString
+            std::string decrypted_text(decrypted_data.begin(), decrypted_data.end());
+            QString decrypted_qstring = QString::fromUtf8(decrypted_text.c_str());
+
+
+            // const char *decryptedStr = rsa.decryptStringENC(currentFileContent.toLocal8Bit(),true);
+
+            qDebug() << "Encrypted string: " << decrypted_qstring;
+
+            ui->plainTextEdit_2->setPlainText(decrypted_qstring);
 
             QFile file(currentFile);
 
@@ -800,14 +859,23 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
             file.rename(newFileName);
 
             currentFile = newFileName;
-            currentFileContent = decryptedStr;
+            currentFileContent = decrypted_qstring;
 
             ui->plainTextEdit_2->setReadOnly(false);
+
+
+            } catch (const Botan::Exception& e) {
+                qDebug() << "Botan Error: " << e.what();
+                return ;
+            } catch (const std::exception& e) {
+                qDebug() << "Standard Error: " << e.what();
+                return ;
+            }
         }
         else{
             QMessageBox::critical(this,"Greška","Ključ nije odabran ili nije ispravan.");
         }
-#endif
+
         break;
     }
     default:

@@ -32,6 +32,8 @@
 #include <botan/hex.h>
 #include <botan/block_cipher.h>
 #include <botan/cipher_mode.h>
+#include <botan/data_src.h>
+#include <botan/pubkey.h>
 
 #include <QPointer>
 
