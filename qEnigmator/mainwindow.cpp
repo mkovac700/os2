@@ -481,30 +481,53 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
             Botan::AutoSeeded_RNG rng;
 
             // Generate a random IV (Initialization Vector)
-            std::vector<uint8_t> iv(16);
-            rng.randomize(iv.data(), iv.size());
+            // std::vector<uint8_t> iv(16);
+            // rng.randomize(iv.data(), iv.size());
 
             // Create the AES cipher in CBC mode with padding
-            std::unique_ptr<Botan::Cipher_Mode> enc = Botan::Cipher_Mode::create("AES-256/CBC/PKCS7", Botan::Cipher_Dir::Encryption);
+            // std::unique_ptr<Botan::Cipher_Mode> enc = Botan::Cipher_Mode::create("AES-256/CBC/PKCS7", Botan::Cipher_Dir::Encryption);
+            std::unique_ptr<Botan::Cipher_Mode> enc = Botan::Cipher_Mode::create("AES-256/CBC/NoPadding", Botan::Cipher_Dir::Encryption);
 
             if (!enc) {
                 qWarning() << "Failed to create AES cipher!";
             }
 
             enc->set_key(secretKey);
-            enc->start(iv);
+            // enc->start(iv);
 
             // Convert QString to QByteArray (UTF-8) and then to a byte vector
-            std::vector<uint8_t> plaintextBytes(currentFileContent.toUtf8().begin(), currentFileContent.toUtf8().end());
+            //std::vector<uint8_t> plaintextBytes(currentFileContent.toUtf8().begin(), currentFileContent.toUtf8().end());
+
+            // Convert QString to UTF-8 and make sure it's exactly 32 bytes
+            // std::vector<uint8_t> plaintextBytes(32, 0);  // Initialize 32-byte array with zeros
+            // QByteArray utf8Data = currentFileContent.toUtf8();
+            // std::memcpy(plaintextBytes.data(), utf8Data.data(), qMin(32, utf8Data.size()));
+
+            // Convert QString to bytes (UTF-8)
+            QByteArray utf8Data = currentFileContent.toUtf8();
+            std::vector<uint8_t> plaintextBytes(utf8Data.begin(), utf8Data.end());
+
+            // Ensure the plaintext length is a multiple of block size (AES block size = 16)
+            size_t block_size = 16;
+            if (plaintextBytes.size() % block_size != 0) {
+                size_t padding_size = block_size - (plaintextBytes.size() % block_size);
+                plaintextBytes.insert(plaintextBytes.end(), padding_size, 0);  // Add padding
+            }
 
             // Pad the input and encrypt
+            // enc->finish(plaintextBytes);
+
+            // Encrypt
+            enc->start(); // ECB mode doesn't use IV
             enc->finish(plaintextBytes);
 
             // Combine IV and ciphertext (IV is needed for decryption)
-            std::vector<uint8_t> encryptedData = iv;
-            encryptedData.insert(encryptedData.end(), plaintextBytes.begin(), plaintextBytes.end());
+            // std::vector<uint8_t> encryptedData = iv;
+            // encryptedData.insert(encryptedData.end(), plaintextBytes.begin(), plaintextBytes.end());
 
-            QString encStr = QString::fromStdString(Botan::hex_encode(encryptedData));
+            // QString encStr = QString::fromStdString(Botan::hex_encode(encryptedData));
+
+            QString encStr = QString::fromStdString(Botan::hex_encode(plaintextBytes));
 
             // crypt.SetEncodedKey(keyHex,"hex");
 
@@ -668,32 +691,33 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
             // Convert hex-encoded encrypted text to raw bytes
             std::vector<uint8_t> encryptedData = Botan::hex_decode(currentFileContent.toStdString());
 
-            if (encryptedData.size() < 16) {
-                qWarning() << "Invalid encrypted data!";
-            }
+            // if (encryptedData.size() < 16) {
+            //     qWarning() << "Invalid encrypted data!";
+            // }
 
             // Extract IV (first 16 bytes) and ciphertext (remaining bytes)
-            std::vector<uint8_t> iv(encryptedData.begin(), encryptedData.begin() + 16);
-            std::vector<uint8_t> ciphertext(encryptedData.begin() + 16, encryptedData.end());
+            // std::vector<uint8_t> iv(encryptedData.begin(), encryptedData.begin() + 16);
+            // std::vector<uint8_t> ciphertext(encryptedData.begin() + 16, encryptedData.end());
 
             // Create AES-256 CBC decryption cipher
-            std::unique_ptr<Botan::Cipher_Mode> dec =
-                Botan::Cipher_Mode::create("AES-256/CBC/PKCS7", Botan::Cipher_Dir::Decryption);
+            // std::unique_ptr<Botan::Cipher_Mode> dec = Botan::Cipher_Mode::create("AES-256/CBC/PKCS7", Botan::Cipher_Dir::Decryption);
+            std::unique_ptr<Botan::Cipher_Mode> dec = Botan::Cipher_Mode::create("AES-256/CBC/NoPadding", Botan::Cipher_Dir::Decryption);
 
             if (!dec) {
                 qWarning() << "Failed to create AES cipher!";
             }
 
             dec->set_key(secretKey);
-            dec->start(iv);
-
+            // dec->start(iv);
+            dec->start();
             // Decrypt the data
-            dec->finish(ciphertext);
+            dec->finish(encryptedData);
 
             // QString decStr = crypt.decryptStringENC(currentFileContent.toLocal8Bit());
 
             // Convert decrypted bytes back to QString
-            QString decStr = QString::fromUtf8(reinterpret_cast<const char*>(ciphertext.data()), ciphertext.size());
+            // QString decStr = QString::fromUtf8(reinterpret_cast<const char*>(ciphertext.data()), ciphertext.size());
+            QString decStr = QString::fromUtf8(reinterpret_cast<const char*>(encryptedData.data())).trimmed();
 
             qDebug() << "Decrypted string: " << decStr;
 
