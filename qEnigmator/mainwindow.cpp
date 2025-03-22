@@ -643,19 +643,28 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
             Botan::PK_Encryptor_EME encryptor(rsa_pub_key, global_rng, "OAEP(SHA-256)");
             const auto ciphertext_data = encryptor.encrypt(plaintext_data, global_rng);
 
-            const auto ciphertext = vectorToQString(ciphertext_data);
+            // const auto ciphertext = vectorToQString(ciphertext_data);
 
-            ui->plainTextEdit_2->setPlainText(ciphertext);
+            // Convert binary ciphertext to Base64 for display
+            QByteArray ciphertext_bytes(reinterpret_cast<const char*>(ciphertext_data.data()), ciphertext_data.size());
+            QString ciphertext_base64 = QString::fromUtf8(ciphertext_bytes.toBase64());
+
+            // ui->plainTextEdit_2->setPlainText(ciphertext);
+            ui->plainTextEdit_2->setPlainText(ciphertext_base64);
 
             QFile file(currentFile);
 
             if( !file.open(QIODevice::WriteOnly | QIODevice::Text))
                 return;
 
+            // if(!file.open(QIODevice::WriteOnly))
+            //     return;
+
             QTextStream out(&file);
             // out << ui->plainTextEdit_2->toPlainText() << "\n";
             // out << ui->plainTextEdit_2->toPlainText();
-            out << ciphertext;
+            // out << ciphertext;
+            out << ciphertext_base64;
 
             file.close();
 
@@ -668,7 +677,8 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
 
             currentFile = newFileName;
             // currentFileContent = QString::fromStdString(encrypted_text);
-            currentFileContent = ciphertext;
+            // currentFileContent = ciphertext;
+            currentFileContent = ciphertext_base64;
 
             ui->plainTextEdit_2->setReadOnly(true);
         }
@@ -850,7 +860,11 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
                 //qDebug() << "Ciphertext vec: " << ciphertext;
 
                 QString ciphertext = currentFileContent;
-                const auto ciphertext_data = qStringToVector(ciphertext);
+
+                QByteArray ciphertext_bytes = QByteArray::fromBase64(ciphertext.toUtf8());
+
+                // const auto ciphertext_data = qStringToVector(ciphertext);
+                std::vector<uint8_t> ciphertext_data(ciphertext_bytes.begin(), ciphertext_bytes.end());
 
                 // Decrypt the message using the private key
                 Botan::PK_Decryptor_EME decryptor(rsa_priv_key, global_rng, "OAEP(SHA-256)");
