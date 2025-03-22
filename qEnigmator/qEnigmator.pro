@@ -47,8 +47,8 @@ win32 {
 
     #CRYPTOPP
 
-    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/cryptopp890/ -lcryptopp
-    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/cryptopp890/ -lcryptopp
+    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/cryptopp890/cryptopp -lcryptopp
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/cryptopp890/cryptopp -lcryptopp
 
     INCLUDEPATH += $$PWD/lib/cryptopp890/
     DEPENDPATH += $$PWD/lib/cryptopp890/

@@ -1008,45 +1008,78 @@ void MainWindow::on_toolButton_4_SavePlainText_clicked()
 
 void MainWindow::on_toolButton_4_SignPlainText_clicked()
 {
-#ifdef X
-
     QString currentFile = QFileDialog::getOpenFileName(this,"Open File","./keys","Key Files (*.pem)");
-    const char *currentFileContent = "";
+    // const char *decKeyContent = "";
 
     if(currentFile.isEmpty()) return;
 
     QFile file(currentFile);
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
 
-    currentFileContent = file.readAll();
+    const char *decKeyContent = file.readAll();
 
     file.close();
 
-    CkRsa rsa;
+    std::string label = "PRIVATE KEY";
+    Botan::DataSource_Memory data_src_priv(decKeyContent);
+    Botan::secure_vector<uint8_t> priv_key_bits = Botan::PEM_Code::decode(data_src_priv, label);
 
-    const char *privateKeyPem = currentFileContent;
+    qDebug() << "private key content loaded: " << decKeyContent;
+    qDebug() << "private key content decoded: " << priv_key_bits;
 
-    CkPrivateKey privkey;
+    // Create AlgorithmIdentifier for RSA
+    Botan::AlgorithmIdentifier alg_id(Botan::OID::from_string("RSA"), Botan::AlgorithmIdentifier::USE_NULL_PARAM);
 
-    if(!privkey.LoadPem(privateKeyPem)){
-        QMessageBox::critical(this,"Greška",privkey.lastErrorText());
-        return;
-    }
+    // Construct RSA_PrivateKey
+    Botan::RSA_PrivateKey rsa_priv_key(alg_id, priv_key_bits);
 
-    const char *privateKeyXml = privkey.getXml();
+    // const char *plaintextHash = ui->lineEdit_4_SourceHash->text().toLocal8Bit();
 
-    if(!rsa.ImportPrivateKey(privateKeyXml)){
-        QMessageBox::critical(this,"Greška",rsa.lastErrorText());
-        return;
-    }
+    auto signer = rsa_priv_key.create_signature_op(global_rng, "EMSA_PKCS1(SHA-256)", "base");
 
-    const char *plaintextHash = ui->lineEdit_4_SourceHash->text().toLocal8Bit();
+    auto hashh = qStringToVector(ui->lineEdit_4_SourceHash->text());
 
-    const char *signedStr = rsa.encryptStringENC(plaintextHash,true);
+    signer->update(hashh);
 
-    ui->plainTextEdit_4_Sign->setPlainText(signedStr);
+    std::vector<uint8_t> signature = signer->sign(global_rng);
+    qDebug() << "Signature:" << QByteArray(reinterpret_cast<const char*>(signature.data()), signature.size()).toHex();
 
-#endif
+    // Step 3: Convert the binary signature to Base64 for storage and display
+    QByteArray signature_bytes(reinterpret_cast<const char*>(signature.data()), signature.size());
+    QString signature_base64 = QString::fromUtf8(signature_bytes.toBase64());
+    qDebug() << "Base64-encoded signature:" << signature_base64;
+
+    ui->plainTextEdit_4_Sign->setPlainText(signature_base64);
+
+    // QString signedStr = vectorToQString(signature);
+
+    // ui->plainTextEdit_4_Sign->setPlainText(signedStr);
+
+    // CkRsa rsa;
+
+    // const char *privateKeyPem = currentFileContent;
+
+    // CkPrivateKey privkey;
+
+    // if(!privkey.LoadPem(privateKeyPem)){
+    //     QMessageBox::critical(this,"Greška",privkey.lastErrorText());
+    //     return;
+    // }
+
+    // const char *privateKeyXml = privkey.getXml();
+
+    // if(!rsa.ImportPrivateKey(privateKeyXml)){
+    //     QMessageBox::critical(this,"Greška",rsa.lastErrorText());
+    //     return;
+    // }
+
+    // const char *plaintextHash = ui->lineEdit_4_SourceHash->text().toLocal8Bit();
+
+    // const char *signedStr = rsa.encryptStringENC(plaintextHash,true);
+
+    // ui->plainTextEdit_4_Sign->setPlainText(signedStr);
+
+
 
 }
 
@@ -1122,55 +1155,104 @@ void MainWindow::on_toolButton_4_SaveSignedText_clicked()
 
 void MainWindow::on_toolButton_4_VerifySignedText_clicked()
 {
-#ifdef X
+    // QString currentFile = QFileDialog::getOpenFileName(this,"Open File","./keys","Key Files (*.pem)");
+    // QString currentFileContent = "";
+
+    // if(currentFile.isEmpty()) return;
+
+    // QFile file(currentFile);
+    // if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+
+    // QTextStream in(&file);
+    // QString line = in.readLine();
+
+    // while(!line.isNull())
+    // {
+    //     currentFileContent.append(line);
+    //     line = in.readLine();
+
+    //     if(!line.isNull()) currentFileContent.append("\n");
+    // }
+
+    // file.close();
 
     QString currentFile = QFileDialog::getOpenFileName(this,"Open File","./keys","Key Files (*.pem)");
-    QString currentFileContent = "";
+    // const char *decKeyContent = "";
 
     if(currentFile.isEmpty()) return;
 
     QFile file(currentFile);
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
 
-    QTextStream in(&file);
-    QString line = in.readLine();
-
-    while(!line.isNull())
-    {
-        currentFileContent.append(line);
-        line = in.readLine();
-
-        if(!line.isNull()) currentFileContent.append("\n");
-    }
+    const char *encKeyContent = file.readAll();
 
     file.close();
 
-    CkRsa rsa;
+    std::string label = "PUBLIC KEY";
+    Botan::DataSource_Memory data_src_pub(encKeyContent);
+    Botan::secure_vector<uint8_t> pub_key_bits = Botan::PEM_Code::decode(data_src_pub, label);
 
-    const char *publicKeyPem = currentFileContent.toLocal8Bit();
+    // Create AlgorithmIdentifier for RSA
+    Botan::AlgorithmIdentifier alg_id(Botan::OID::from_string("RSA"), Botan::AlgorithmIdentifier::USE_NULL_PARAM);
 
-    CkPublicKey pubkey;
+    // Construct RSA_PublicKey
+    Botan::RSA_PublicKey rsa_pub_key(alg_id,pub_key_bits);
 
-    if(!pubkey.LoadFromString(publicKeyPem)){
-        QMessageBox::critical(this,"Greška",pubkey.lastErrorText());
-        return;
-    }
+    QString signedStr = ui->plainTextEdit_4_Sign->toPlainText();
 
-    const char *publicKeyXml = pubkey.getXml();
+    // Step 6: Convert the Base64 string back to binary
+    QByteArray loaded_signature_bytes = QByteArray::fromBase64(signedStr.toUtf8());
+    std::vector<uint8_t> loaded_signature(loaded_signature_bytes.begin(), loaded_signature_bytes.end());
 
-    if(!rsa.ImportPublicKey(publicKeyXml)){
-        QMessageBox::critical(this,"Greška",rsa.lastErrorText());
-        return;
-    }
+    // // Step 7: "Decrypt" the signature using the public key (raw RSA operation)
+    // std::vector<uint8_t> decrypted_data = rsa_pub_key.raw_public_key_op(loaded_signature);
+    // qDebug() << "Decrypted data:" << QByteArray(reinterpret_cast<const char*>(decrypted_data.data()), decrypted_data.size()).toHex();
 
-    const char *signedStr = ui->plainTextEdit_4_Sign->toPlainText().toLocal8Bit();
+    // // Step 8: Remove PKCS#1 v1.5 padding to retrieve the original hash
+    // // PKCS#1 v1.5 padding starts with 0x00 0x01 ... 0x00
+    // if (decrypted_data.size() >= hash.size() + 11) { // Minimum padding size is 11 bytes
+    //     size_t padding_start = decrypted_data.size() - hash.size();
+    //     if (decrypted_data[padding_start - 1] == 0x00) {
+    //         std::vector<uint8_t> retrieved_hash(decrypted_data.begin() + padding_start, decrypted_data.end());
+    //         qDebug() << "Retrieved hash:" << QByteArray(reinterpret_cast<const char*>(retrieved_hash.data()), retrieved_hash.size()).toHex();
 
-    const char *verifiedStr = rsa.decryptStringENC(signedStr,false);
+    //         // Step 9: Compare the retrieved hash with the original hash
+    //         if (retrieved_hash == hash) {
+    //             qDebug() << "Signature is valid!";
+    //         } else {
+    //             qDebug() << "Signature is invalid!";
+    //         }
+    //     } else {
+    //         qDebug() << "Invalid padding in decrypted data!";
+    //     }
+    // } else {
+    //     qDebug() << "Decrypted data is too short to contain valid padding!";
+    // }
 
-    ui->lineEdit_4_SignHash->setText(verifiedStr);
+    // CkRsa rsa;
+
+    // const char *publicKeyPem = currentFileContent.toLocal8Bit();
+
+    // CkPublicKey pubkey;
+
+    // if(!pubkey.LoadFromString(publicKeyPem)){
+    //     QMessageBox::critical(this,"Greška",pubkey.lastErrorText());
+    //     return;
+    // }
+
+    // const char *publicKeyXml = pubkey.getXml();
+
+    // if(!rsa.ImportPublicKey(publicKeyXml)){
+    //     QMessageBox::critical(this,"Greška",rsa.lastErrorText());
+    //     return;
+    // }
+
+    // const char *signedStr = ui->plainTextEdit_4_Sign->toPlainText().toLocal8Bit();
+
+    // const char *verifiedStr = rsa.decryptStringENC(signedStr,false);
+
+    // ui->lineEdit_4_SignHash->setText(verifiedStr);
     ui->lineEdit_4_SignHash->setCursorPosition(0);
-
-#endif
 }
 
 void MainWindow::on_plainTextEdit_4_Sign_textChanged()
@@ -1253,6 +1335,18 @@ std::vector<uint8_t> MainWindow::qStringToVector(const QString &str)
 {
     QByteArray utf8Data = str.toUtf8(); // Convert QString to UTF-8 encoded QByteArray
     return std::vector<uint8_t>(utf8Data.begin(), utf8Data.end());
+}
+
+void MainWindow::LoadPEMKey(const std::string &filename, CryptoPP::RSA::PrivateKey &privateKey)
+{
+    CryptoPP::FileSource file(filename.c_str(), true);
+    PEM_Load(file, privateKey);
+}
+
+void MainWindow::LoadPEMKey(const std::string &filename, CryptoPP::RSA::PublicKey &publicKey)
+{
+    CryptoPP::FileSource file(filename.c_str(), true);
+    PEM_Load(file, publicKey);
 }
 
 void MainWindow::CheckKeysDir()

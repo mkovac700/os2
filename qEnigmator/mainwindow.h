@@ -34,6 +34,17 @@
 #include <botan/cipher_mode.h>
 #include <botan/data_src.h>
 #include <botan/pubkey.h>
+#include <botan/pk_ops.h>
+#include <botan/hash.h>
+
+#include <cryptopp/rsa.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/base64.h>
+#include <cryptopp/osrng.h>
+#include <cryptopp/files.h>
+#include <cryptopp/hex.h>
+#include <cryptopp/pem.h>
 
 #include <QPointer>
 
@@ -136,5 +147,8 @@ private:
 private:
     QString vectorToQString(const std::vector<uint8_t> &data);
     std::vector<uint8_t> qStringToVector(const QString &str);
+
+    void LoadPEMKey(const std::string& filename, CryptoPP::RSA::PrivateKey& privateKey);
+    void LoadPEMKey(const std::string& filename, CryptoPP::RSA::PublicKey& publicKey);
 };
 #endif // MAINWINDOW_H
