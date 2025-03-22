@@ -127,5 +127,14 @@ private:
 
     //about
     QPointer<AboutDialog> aboutDialog;
+
+    //RNG
+    Botan::AutoSeeded_RNG global_rng;
+
+    std::vector<uint8_t> ct;
+
+private:
+    QString vectorToQString(const std::vector<uint8_t> &data);
+    std::vector<uint8_t> qStringToVector(const QString &str);
 };
 #endif // MAINWINDOW_H

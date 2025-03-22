@@ -601,7 +601,7 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
 
             // Botan::RSA_PublicKey publicKey(Botan::AlgorithmIdentifier::Encoding_Option, decodedPublicKey);
 
-            Botan::AutoSeeded_RNG rng;
+            //Botan::AutoSeeded_RNG rng;
 
             // Decode PEM data
             std::string label = "PUBLIC KEY";
@@ -616,13 +616,19 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
 
             QString plaintext = currentFileContent;
 
-            std::string plaintext_utf8 = plaintext.toUtf8().toStdString();
-            std::vector<uint8_t> plaintext_data(plaintext_utf8.begin(), plaintext_utf8.end());
+            // Convert QString to bytes (UTF-8)
+            // std::string plaintext_utf8 = plaintext.toUtf8().toStdString();
+            QByteArray plaintext_utf8 = plaintext.toUtf8();
+            //std::vector<uint8_t> plaintext_data(plaintext_utf8.begin(), plaintext_utf8.end());
+            std::string pt = plaintext_utf8.toStdString();
+            const Botan::secure_vector<uint8_t> plaintext_data(pt.data(), pt.data() + pt.length());
 
             // Encrypt a message using the public key
-            Botan::PK_Encryptor_EME encryptor(rsa_pub_key, rng, "OAEP(SHA-256)");
-            std::vector<uint8_t> ciphertext = encryptor.encrypt(
-                reinterpret_cast<const uint8_t*>(plaintext_data.data()), plaintext_data.size(), rng);
+            Botan::PK_Encryptor_EME encryptor(rsa_pub_key, global_rng, "OAEP(SHA-256)");
+            // std::vector<uint8_t> ciphertext = encryptor.encrypt(
+            //     reinterpret_cast<const uint8_t*>(plaintext_data.data()), plaintext_data.size(), global_rng);
+            const auto ciphertext = encryptor.encrypt(plaintext_data, global_rng);
+            ct = ciphertext;
 
             std::string encrypted_text(ciphertext.begin(), ciphertext.end());
 
@@ -638,7 +644,8 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
                 return;
 
             QTextStream out(&file);
-            out << ui->plainTextEdit_2->toPlainText() << "\n";
+            // out << ui->plainTextEdit_2->toPlainText() << "\n";
+            out << ui->plainTextEdit_2->toPlainText();
 
             file.close();
 
@@ -808,60 +815,79 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
 
             try{
 
+                //Botan::AutoSeeded_RNG rng;
+
+                // Decode PEM data
+                std::string label = "PRIVATE KEY";
+                Botan::DataSource_Memory data_src_priv(decKeyContent.toStdString());
+                Botan::secure_vector<uint8_t> priv_key_bits = Botan::PEM_Code::decode(data_src_priv, label);
+
+                qDebug() << "private key content loaded: " << decKeyContent.toStdString();
+                qDebug() << "private key content decoded: " << priv_key_bits;
+
+                // Create AlgorithmIdentifier for RSA
+                Botan::AlgorithmIdentifier alg_id(Botan::OID::from_string("RSA"), Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+
+                // Construct RSA_PrivateKey
+                Botan::RSA_PrivateKey rsa_priv_key(alg_id, priv_key_bits);
+
+                qDebug() << "Private key constructed!" << rsa_priv_key.private_key_info();
+
+                std::vector<uint8_t> ciphertext(currentFileContent.toStdString().begin(), currentFileContent.toStdString().end());
+
+                qDebug() << "Ciphertext plain: " << currentFileContent.toStdString();
+                //qDebug() << "Ciphertext vec: " << ciphertext;
+
+                // Decrypt the message using the private key
+                Botan::PK_Decryptor_EME decryptor(rsa_priv_key, global_rng, "OAEP(SHA-256)");
+                // Botan::secure_vector<uint8_t> decrypted_data = decryptor.decrypt(
+                //     ciphertext.data(), ciphertext.size());
+
+                const auto pt2 = decryptor.decrypt(ct);
+
+                qDebug() << "Data decrypted!";
+
+                // Convert decrypted data to QString
+                std::string pt2_1(pt2.begin(), pt2.end());
+                QString pt2_2 = QString::fromUtf8(pt2_1.c_str());
+
+                qDebug() << "Decrypted string org: " << pt2_2;
 
 
-            Botan::AutoSeeded_RNG rng;
+                Botan::secure_vector<uint8_t> decrypted_data = decryptor.decrypt(ciphertext);
 
-            // Decode PEM data
-            std::string label = "PRIVATE KEY";
-            Botan::DataSource_Memory data_src_priv(decKeyContent.toStdString());
-            Botan::secure_vector<uint8_t> priv_key_bits = Botan::PEM_Code::decode(data_src_priv, label);
-
-            // Create AlgorithmIdentifier for RSA
-            Botan::AlgorithmIdentifier alg_id(Botan::OID::from_string("RSA"), Botan::AlgorithmIdentifier::USE_NULL_PARAM);
-
-            // Construct RSA_PrivateKey
-            Botan::RSA_PrivateKey rsa_priv_key(alg_id, priv_key_bits);
-
-            std::vector<uint8_t> ciphertext(currentFileContent.toStdString().begin(), currentFileContent.toStdString().end());
-
-            // Decrypt the message using the private key
-            Botan::PK_Decryptor_EME decryptor(rsa_priv_key, rng, "OAEP(SHA-256)");
-            Botan::secure_vector<uint8_t> decrypted_data = decryptor.decrypt(
-                ciphertext.data(), ciphertext.size());
-
-            // Convert decrypted data to QString
-            std::string decrypted_text(decrypted_data.begin(), decrypted_data.end());
-            QString decrypted_qstring = QString::fromUtf8(decrypted_text.c_str());
+                // Convert decrypted data to QString
+                std::string decrypted_text(decrypted_data.begin(), decrypted_data.end());
+                QString decrypted_qstring = QString::fromUtf8(decrypted_text.c_str());
 
 
-            // const char *decryptedStr = rsa.decryptStringENC(currentFileContent.toLocal8Bit(),true);
+                // const char *decryptedStr = rsa.decryptStringENC(currentFileContent.toLocal8Bit(),true);
 
-            qDebug() << "Encrypted string: " << decrypted_qstring;
+                qDebug() << "Decrypted string: " << decrypted_qstring;
 
-            ui->plainTextEdit_2->setPlainText(decrypted_qstring);
+                ui->plainTextEdit_2->setPlainText(decrypted_qstring);
 
-            QFile file(currentFile);
+                QFile file(currentFile);
 
-            if( !file.open(QIODevice::WriteOnly | QIODevice::Text))
-                return;
+                if( !file.open(QIODevice::WriteOnly | QIODevice::Text))
+                    return;
 
-            QTextStream out(&file);
-            out << ui->plainTextEdit_2->toPlainText() << "\n";
+                QTextStream out(&file);
+                out << ui->plainTextEdit_2->toPlainText() << "\n";
 
-            file.close();
+                file.close();
 
-            QFileInfo fileInfo(currentFile);
-            QString newFileName = fileInfo.dir().path() + "/" + currentFile.split("/").last().split(".").first() + ".txt";
+                QFileInfo fileInfo(currentFile);
+                QString newFileName = fileInfo.dir().path() + "/" + currentFile.split("/").last().split(".").first() + ".txt";
 
-            qDebug() << "new file name: " << newFileName ;
+                qDebug() << "new file name: " << newFileName ;
 
-            file.rename(newFileName);
+                file.rename(newFileName);
 
-            currentFile = newFileName;
-            currentFileContent = decrypted_qstring;
+                currentFile = newFileName;
+                currentFileContent = decrypted_qstring;
 
-            ui->plainTextEdit_2->setReadOnly(false);
+                ui->plainTextEdit_2->setReadOnly(false);
 
 
             } catch (const Botan::Exception& e) {
@@ -1179,6 +1205,18 @@ void MainWindow::CheckDocsDir()
     else{
         qDebug() << "docs directory exist already";
     }
+}
+
+QString MainWindow::vectorToQString(const std::vector<uint8_t> &data)
+{
+    // Assuming the data is UTF-8 encoded
+    return QString::fromUtf8(reinterpret_cast<const char*>(data.data()), data.size());
+}
+
+std::vector<uint8_t> MainWindow::qStringToVector(const QString &str)
+{
+    QByteArray utf8Data = str.toUtf8(); // Convert QString to UTF-8 encoded QByteArray
+    return std::vector<uint8_t>(utf8Data.begin(), utf8Data.end());
 }
 
 void MainWindow::CheckKeysDir()
