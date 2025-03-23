@@ -45,6 +45,7 @@
 #include <cryptopp/files.h>
 #include <cryptopp/hex.h>
 #include <cryptopp/pem.h>
+#include <cryptopp/config.h>
 
 #include <QPointer>
 
@@ -150,5 +151,8 @@ private:
 
     void LoadPEMKey(const std::string& filename, CryptoPP::RSA::PrivateKey& privateKey);
     void LoadPEMKey(const std::string& filename, CryptoPP::RSA::PublicKey& publicKey);
+
+    std::string RSAEncryptWithPrivateKey(const std::string& input, const CryptoPP::RSA::PrivateKey& privateKey);
+    std::string RSADecryptWithPublicKey(const std::string& input, const CryptoPP::RSA::PublicKey& publicKey);
 };
 #endif // MAINWINDOW_H
