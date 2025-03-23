@@ -32,14 +32,14 @@
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:700;&quot;&gt;qEnigmator v1.0.0&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:700;&quot;&gt;qEnigmator v2.0.0-alpha.1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -54,7 +54,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -67,7 +67,7 @@
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Program je nastao u skopu projekta na temu &amp;quot;Kriptiranje, dekriptiranje, digitalni potpis&amp;quot; iz kolegija Operacijski sustavi 2.&lt;/p&gt;&lt;p&gt;Marijan Kovač &amp;copy; 2022&lt;br/&gt;Fakultet organizacije i informatike, Varaždin&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/images/foi_logo.png&quot; width=&quot;80&quot; height=&quot;50&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -90,19 +90,19 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-474</y>
             <width>494</width>
-            <height>338</height>
+            <height>618</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Program je napisan u programskom jeziku C++ pomoću sljedećih biblioteka i alata:&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Qt &lt;br/&gt;&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Verzija 6.4.0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;img src=&quot;:/images/qt_logo.png&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Chilkat software &lt;br/&gt;&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Verzija 9.5.0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://www.chilkatsoft.com/&quot;&gt;&lt;img src=&quot;:/images/chilkat_logo.jpg&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Program je napisan u programskom jeziku C++ pomoću sljedećih biblioteka i alata:&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Qt &lt;br/&gt;&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Verzija 6.4.0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;img src=&quot;:/images/qt_logo.png&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Chilkat software &lt;br/&gt;&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Verzija 9.5.0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://www.chilkatsoft.com/&quot;&gt;&lt;img src=&quot;:/images/chilkat_logo.jpg&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Crypto++&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Verzija 8.9.0&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/images/Crypto++-logo.png&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Botan&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Verzija 3.7.1&lt;/span&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignCenter</set>
+              <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -129,7 +129,7 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-149</y>
+            <y>0</y>
             <width>494</width>
             <height>293</height>
            </rect>
@@ -147,7 +147,7 @@
              <item>
               <spacer name="horizontalSpacer_2">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
