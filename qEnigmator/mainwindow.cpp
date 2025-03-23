@@ -228,7 +228,7 @@ void MainWindow::on_toolButton_1_Generate_clicked()
 
         if (pub_key_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&pub_key_file);
-            out << Botan::PEM_Code::encode(rsa_pub_key.public_key_bits(),"PUBLIC KEY").c_str();
+            out << Botan::PEM_Code::encode(rsa_pub_key.public_key_bits(), PEM_PUBLIC_HEADER).c_str();
             pub_key_file.close();
             qDebug() << "Public key saved to " << filename.toStdString();
             success = true;
@@ -254,7 +254,7 @@ void MainWindow::on_toolButton_1_Generate_clicked()
 
         if (priv_key_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&priv_key_file);
-            out << Botan::PEM_Code::encode(rsa_priv_key.private_key_bits(),"PRIVATE KEY").c_str();
+            out << Botan::PEM_Code::encode(rsa_priv_key.private_key_bits(), PEM_PRIVATE_HEADER).c_str();
             priv_key_file.close();
             qDebug() << "Private key saved to " << filename.toStdString();
             success = true;
@@ -265,7 +265,7 @@ void MainWindow::on_toolButton_1_Generate_clicked()
 
         if(success){
             if(QMessageBox::Yes == QMessageBox::question(this,"Stvaranje ključeva","RSA par ključeva generiran. Želite li prikazati javni ključ?")){
-                ui->plainTextEdit_1->setPlainText(Botan::PEM_Code::encode(rsa_pub_key.public_key_bits(),"PUBLIC KEY").c_str());
+                ui->plainTextEdit_1->setPlainText(Botan::PEM_Code::encode(rsa_pub_key.public_key_bits(),PEM_PUBLIC_HEADER).c_str());
             }
         }
         else{
@@ -595,7 +595,7 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
             // Load the public key from PEM
             // Botan::DataSource_Memory pem(encKeyContent.toStdString());
 
-            // std::string label = "PUBLIC KEY";
+            // std::string label = PEM_PUBLIC_HEADER;
 
             // auto decodedPublicKey = Botan::PEM_Code::decode(encKeyContent.toStdString(), label);
 
@@ -604,7 +604,7 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
             //Botan::AutoSeeded_RNG rng;
 
             // Decode PEM data
-            std::string label = "PUBLIC KEY";
+            std::string label = PEM_PUBLIC_HEADER;
             Botan::DataSource_Memory data_src_pub(encKeyContent.toStdString());
             Botan::secure_vector<uint8_t> pub_key_bits = Botan::PEM_Code::decode(data_src_pub, label);
 
@@ -613,6 +613,11 @@ void MainWindow::on_toolButton_2_EncryptPlainText_clicked()
 
             // Construct RSA_PublicKey
             Botan::RSA_PublicKey rsa_pub_key(alg_id,pub_key_bits);
+
+            // CONVERT BOTAN RSA PUBKEY (SERIALIZE)
+            std::string pk2 = Botan::X509::PEM_encode(rsa_pub_key);
+
+            qDebug() << "CONVERTED BOTAN RSA PUBKEY: " << QString::fromStdString(pk2);
 
             QString plaintext = currentFileContent;
 
@@ -839,7 +844,7 @@ void MainWindow::on_toolButton_2_DecryptPlainText_clicked()
                 //Botan::AutoSeeded_RNG rng;
 
                 // Decode PEM data
-                std::string label = "PRIVATE KEY";
+                std::string label = PEM_PRIVATE_HEADER;
                 Botan::DataSource_Memory data_src_priv(decKeyContent.toStdString());
                 Botan::secure_vector<uint8_t> priv_key_bits = Botan::PEM_Code::decode(data_src_priv, label);
 
@@ -1008,27 +1013,27 @@ void MainWindow::on_toolButton_4_SavePlainText_clicked()
 
 void MainWindow::on_toolButton_4_SignPlainText_clicked()
 {
-    CryptoPP::AutoSeededRandomPool rng2;
+    // CryptoPP::AutoSeededRandomPool rng2;
 
-    // Generate private key
-    CryptoPP::RSA::PrivateKey privateKey2;
-    privateKey2.GenerateRandomWithKeySize(rng2, 2048);
+    // // Generate private key
+    // CryptoPP::RSA::PrivateKey privateKey2;
+    // privateKey2.GenerateRandomWithKeySize(rng2, 2048);
 
-    // Generate public key
-    CryptoPP::RSA::PublicKey publicKey(privateKey2);
+    // // Generate public key
+    // CryptoPP::RSA::PublicKey publicKey(privateKey2);
 
-    try{
-        // Save private key in PEM format
-        CryptoPP::FileSink privateKeyFile("cryptopp_private_key.pem");
-        PEM_Save(privateKeyFile, privateKey2);
-        qDebug() << "Private key saved somewhere..." ;
-        // Save public key in PEM format
-        CryptoPP::FileSink publicKeyFile("cryptopp_public_key.pem");
-        PEM_Save(publicKeyFile, publicKey);
-    }catch(const CryptoPP::Exception& e){
-        qDebug() << "Error saving keys! " << e.what();
-        return;
-    }
+    // try{
+    //     // Save private key in PEM format
+    //     CryptoPP::FileSink privateKeyFile("cryptopp_private_key.pem");
+    //     PEM_Save(privateKeyFile, privateKey2);
+    //     qDebug() << "Private key saved somewhere..." ;
+    //     // Save public key in PEM format
+    //     CryptoPP::FileSink publicKeyFile("cryptopp_public_key.pem");
+    //     PEM_Save(publicKeyFile, publicKey);
+    // }catch(const CryptoPP::Exception& e){
+    //     qDebug() << "Error saving keys! " << e.what();
+    //     return;
+    // }
 
 
     QString currentFile = QFileDialog::getOpenFileName(this,"Open File","./keys","Key Files (*.pem)");
@@ -1045,7 +1050,7 @@ void MainWindow::on_toolButton_4_SignPlainText_clicked()
 
 
 
-    // std::string label = "PRIVATE KEY";
+    // std::string label = PEM_PRIVATE_HEADER;
     // Botan::DataSource_Memory data_src_priv(decKeyContent);
     // Botan::secure_vector<uint8_t> priv_key_bits = Botan::PEM_Code::decode(data_src_priv, label);
 
@@ -1241,35 +1246,37 @@ void MainWindow::on_toolButton_4_VerifySignedText_clicked()
 
     CryptoPP::RSA::PublicKey publicKey;
 
-    try{
-        LoadPEMKey(currentFile.toStdString(), publicKey);
-    }catch(const CryptoPP::Exception& e){
-        qDebug() << "Error loading key! " << e.what();
-        return;
-    }
+    // try{
+    //     LoadPEMKey(currentFile.toStdString(), publicKey);
+    // }catch(const CryptoPP::Exception& e){
+    //     qDebug() << "Error loading key! " << e.what();
+    //     return;
+    // }
+
+    publicKey = LoadCryptoppPEMKey(currentFile.toStdString());
 
     try{
-    CryptoPP::AutoSeededRandomPool rng;
+        CryptoPP::AutoSeededRandomPool rng;
 
-    std::string signatureBase64 = ui->plainTextEdit_4_Sign->toPlainText().toStdString();
+        std::string signatureBase64 = ui->plainTextEdit_4_Sign->toPlainText().toStdString();
 
-    std::string decryptedHash;
-    //CryptoPP::RSAES_OAEP_SHA_Decryptor decryptor(publicKey);
+        std::string decryptedHash;
+        //CryptoPP::RSAES_OAEP_SHA_Decryptor decryptor(publicKey);
 
-    // Decode the Base64 signature back to binary
-    std::string signatureBinary;
-    CryptoPP::StringSource(signatureBase64, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(signatureBinary)));
+        // Decode the Base64 signature back to binary
+        std::string signatureBinary;
+        CryptoPP::StringSource(signatureBase64, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(signatureBinary)));
 
-    // CryptoPP::StringSource(signatureBinary, true, new CryptoPP::PK_DecryptorFilter(rng, decryptor, new CryptoPP::StringSink(decryptedHash)));
+        // CryptoPP::StringSource(signatureBinary, true, new CryptoPP::PK_DecryptorFilter(rng, decryptor, new CryptoPP::StringSink(decryptedHash)));
 
-    decryptedHash = RSADecryptWithPublicKey(signatureBinary, publicKey);
+        decryptedHash = RSADecryptWithPublicKey(signatureBinary, publicKey);
 
-    ui->lineEdit_4_SignHash->setText(QString::fromStdString(decryptedHash));
+        ui->lineEdit_4_SignHash->setText(QString::fromStdString(decryptedHash));
     }catch(CryptoPP::Exception& e){
         qDebug() << "Error verifying! " << e.what();
     }
 
-    // std::string label = "PUBLIC KEY";
+    // std::string label = PEM_PUBLIC_HEADER;
     // Botan::DataSource_Memory data_src_pub(encKeyContent);
     // Botan::secure_vector<uint8_t> pub_key_bits = Botan::PEM_Code::decode(data_src_pub, label);
 
@@ -1430,6 +1437,57 @@ void MainWindow::LoadPEMKey(const std::string &filename, CryptoPP::RSA::PublicKe
     PEM_Load(file, publicKey);
 }
 
+CryptoPP::RSA::PublicKey MainWindow::LoadCryptoppPEMKey(const std::string &filename)
+{
+    CryptoPP::RSA::PublicKey pk;
+
+    QString keyFileContent;
+    QString currentFile = QString::fromStdString(filename);
+
+    if(currentFile.isEmpty()) return pk;
+
+    qDebug() << "Current file: " << currentFile;
+
+    QFile file(currentFile);
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) return pk;
+
+    QTextStream in(&file);
+    QString line = in.readLine();
+
+    while(!line.isNull())
+    {
+        keyFileContent.append(line);
+        line = in.readLine();
+
+        if(!line.isNull()) keyFileContent.append("\n");
+    }
+
+    file.close();
+
+    qDebug() << "Key file content: " << keyFileContent;
+
+    // Decode PEM data
+    std::string label = PEM_PUBLIC_HEADER;
+    Botan::DataSource_Memory data_src_pub(keyFileContent.toStdString());
+    Botan::secure_vector<uint8_t> pub_key_bits = Botan::PEM_Code::decode(data_src_pub, label);
+
+    // Create AlgorithmIdentifier for RSA
+    Botan::AlgorithmIdentifier alg_id(Botan::OID::from_string("RSA"), Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+
+    // Construct RSA_PublicKey
+    Botan::RSA_PublicKey rsa_pub_key(alg_id,pub_key_bits);
+
+    Botan::BigInt modulus = rsa_pub_key.get_n();
+    Botan::BigInt exponent = rsa_pub_key.get_e();
+
+    CryptoPP::Integer mod(modulus.to_hex_string().c_str());
+    CryptoPP::Integer exp(modulus.to_hex_string().c_str());
+
+    pk.Initialize(mod, exp);
+
+    return pk;
+}
+
 std::string MainWindow::RSAEncryptWithPrivateKey(const std::string &input, const CryptoPP::RSA::PrivateKey &privateKey)
 {
     CryptoPP::AutoSeededRandomPool rng;
@@ -1462,6 +1520,16 @@ std::string MainWindow::RSADecryptWithPublicKey(const std::string &input, const 
     decryptedInteger.Encode(reinterpret_cast<CryptoPP::byte*>(&decrypted[0]), decrypted.size());
 
     return decrypted;
+}
+
+void MainWindow::LoadX509PublicKey(const std::string &filename, CryptoPP::RSA::PublicKey &publicKey)
+{
+    // CryptoPP::FileSource file(filename.c_str(), true);
+    // CryptoPP::X509PublicKey x509Key;
+    // PEM_Load(file, x509Key);
+
+    // // Extract the RSA public key from the X.509 key
+    // publicKey.BERDecode(x509Key.GetDER());
 }
 
 void MainWindow::CheckKeysDir()

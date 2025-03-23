@@ -36,6 +36,8 @@
 #include <botan/pubkey.h>
 #include <botan/pk_ops.h>
 #include <botan/hash.h>
+#include <botan/pkcs8.h>
+#include <botan/x509_key.h>
 
 #include <cryptopp/rsa.h>
 #include <cryptopp/sha.h>
@@ -145,6 +147,9 @@ private:
 
     std::vector<uint8_t> ct;
 
+    const std::string PEM_PUBLIC_HEADER = "RSA PUBLIC KEY";
+    const std::string PEM_PRIVATE_HEADER = "RSA PRIVATE KEY";
+
 private:
     QString vectorToQString(const std::vector<uint8_t> &data);
     std::vector<uint8_t> qStringToVector(const QString &str);
@@ -152,7 +157,11 @@ private:
     void LoadPEMKey(const std::string& filename, CryptoPP::RSA::PrivateKey& privateKey);
     void LoadPEMKey(const std::string& filename, CryptoPP::RSA::PublicKey& publicKey);
 
+    CryptoPP::RSA::PublicKey LoadCryptoppPEMKey(const std::string& filename);
+
     std::string RSAEncryptWithPrivateKey(const std::string& input, const CryptoPP::RSA::PrivateKey& privateKey);
     std::string RSADecryptWithPublicKey(const std::string& input, const CryptoPP::RSA::PublicKey& publicKey);
+
+    void LoadX509PublicKey(const std::string& filename, CryptoPP::RSA::PublicKey& publicKey);
 };
 #endif // MAINWINDOW_H
